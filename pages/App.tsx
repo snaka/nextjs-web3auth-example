@@ -5,6 +5,7 @@ import { Web3AuthNoModal } from "@web3auth/no-modal";
 import { WALLET_ADAPTERS, CHAIN_NAMESPACES, SafeEventEmitterProvider } from "@web3auth/base";
 import { OpenloginAdapter } from "@web3auth/openlogin-adapter";
 import RPC from "./web3RPC";
+import Link from "next/link";
 
 const clientId = process.env.NEXT_PUBLIC_WEB3AUTH_CLIENT_ID ?? '';
 const verifier = process.env.NEXT_PUBLIC_WEB3AUTH_VERIFIER ?? '';
@@ -275,6 +276,18 @@ function App() {
       </h1>
 
       <div className="grid">{provider ? loggedInView : unloggedInView}</div>
+
+      <hr />
+      <div className="grid">
+        <div className="flex-container">
+          <button className="card">
+            <Link href="/foo">Go to Foo</Link>
+          </button>
+        </div>
+        <div>
+          <p>window.history.state:<code>{JSON.stringify(window.history.state)}</code></p>
+        </div>
+      </div>
 
       <footer className="footer">
         <a href="https://github.com/Web3Auth/web3auth-pnp-examples/" target="_blank" rel="noopener noreferrer">
