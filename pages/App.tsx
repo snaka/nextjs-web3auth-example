@@ -4,11 +4,24 @@ import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { Web3AuthNoModal } from "@web3auth/no-modal";
 import { WALLET_ADAPTERS, CHAIN_NAMESPACES, SafeEventEmitterProvider } from "@web3auth/base";
 import { OpenloginAdapter } from "@web3auth/openlogin-adapter";
+import { CommonPrivateKeyProvider } from "@web3auth/base-provider";
 import RPC from "./web3RPC";
 import Link from "next/link";
 
 const clientId = process.env.NEXT_PUBLIC_WEB3AUTH_CLIENT_ID ?? '';
 const verifier = process.env.NEXT_PUBLIC_WEB3AUTH_VERIFIER ?? '';
+
+const chainConfig = {
+  displayName: 'Polygon Testnet',
+  chainNamespace: CHAIN_NAMESPACES.EIP155,
+  chainId: "0x13881",
+  rpcTarget: "https://rpc.ankr.com/polygon_mumbai", // This is the public RPC we have added, please pass on your own endpoint while creating an app
+  blockExplorer: 'https://mumbai.polygonscan.com/',
+  ticker: 'MATIC',
+  tickerName: 'Matic'
+};
+
+const privateKeyProvider = new CommonPrivateKeyProvider({ config: { chainConfig } });
 
 function App() {
   const [web3auth, setWeb3auth] = useState<Web3AuthNoModal | null>(null);
@@ -19,16 +32,7 @@ function App() {
       try {
         const web3auth = new Web3AuthNoModal({
           clientId,
-          // web3AuthNetwork: "testnet", // mainnet, aqua, celeste, cyan or testnet
-          chainConfig: {
-            displayName: 'Polygon Testnet',
-            chainNamespace: CHAIN_NAMESPACES.EIP155,
-            chainId: "0x13881",
-            rpcTarget: "https://rpc.ankr.com/polygon_mumbai", // This is the public RPC we have added, please pass on your own endpoint while creating an app
-            blockExplorer: 'https://mumbai.polygonscan.com/',
-            ticker: 'MATIC',
-            tickerName: 'Matic'
-          },
+          chainConfig,
         });
         if (!web3auth) {
           console.error("web3auth not initialized yet");
@@ -36,6 +40,7 @@ function App() {
         }
 
         const openloginAdapter = new OpenloginAdapter({
+          privateKeyProvider,
           adapterSettings: {
             network: "testnet",
             clientId,
@@ -58,9 +63,8 @@ function App() {
         setWeb3auth(web3auth);
 
         await web3auth.init();
-        if (web3auth.provider) {
-          setProvider(web3auth.provider);
-        };
+        setProvider(web3auth.provider);
+
         console.log('web3auth.init done')
       } catch (error) {
         console.error(error);
@@ -275,7 +279,7 @@ function App() {
         & NextJS Example
       </h1>
 
-      <div className="grid">{provider ? loggedInView : unloggedInView}</div>
+      <div className="grid">{web3auth?.connected ? loggedInView : unloggedInView}</div>
 
       <hr />
       <div className="grid">
