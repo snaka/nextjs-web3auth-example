@@ -10,9 +10,10 @@
   },
   "dependencies": {
     "@solana/web3.js": "^1.77.3",
-    "@web3auth/base": "^5.2.0",
-    "@web3auth/no-modal": "^5.2.0",
-    "@web3auth/openlogin-adapter": "^5.2.0",
+    "@web3auth/base": "^6.1.1",
+    "@web3auth/no-modal": "^6.1.1",
+    "@web3auth/openlogin-adapter": "^6.1.1",
+    "@web3auth/base-provider": "^6.1.1",
     "firebase": "^9.22.2",
     "i18n": "^0.15.1",
     "next": "^12.3.1",
