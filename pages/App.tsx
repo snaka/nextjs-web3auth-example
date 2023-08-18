@@ -2,30 +2,39 @@ import { useEffect, useState } from "react";
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { Web3AuthNoModal } from "@web3auth/no-modal";
-import { WALLET_ADAPTERS, CHAIN_NAMESPACES, SafeEventEmitterProvider } from "@web3auth/base";
+import {
+  WALLET_ADAPTERS,
+  CHAIN_NAMESPACES,
+  SafeEventEmitterProvider,
+  ADAPTER_EVENTS,
+} from "@web3auth/base";
 import { OpenloginAdapter } from "@web3auth/openlogin-adapter";
 import { CommonPrivateKeyProvider } from "@web3auth/base-provider";
 import RPC from "./web3RPC";
 import Link from "next/link";
 
-const clientId = process.env.NEXT_PUBLIC_WEB3AUTH_CLIENT_ID ?? '';
-const verifier = process.env.NEXT_PUBLIC_WEB3AUTH_VERIFIER ?? '';
+const clientId = process.env.NEXT_PUBLIC_WEB3AUTH_CLIENT_ID ?? "";
+const verifier = process.env.NEXT_PUBLIC_WEB3AUTH_VERIFIER ?? "";
 
 const chainConfig = {
-  displayName: 'Polygon Testnet',
+  displayName: "Polygon Testnet",
   chainNamespace: CHAIN_NAMESPACES.EIP155,
   chainId: "0x13881",
   rpcTarget: "https://rpc.ankr.com/polygon_mumbai", // This is the public RPC we have added, please pass on your own endpoint while creating an app
-  blockExplorer: 'https://mumbai.polygonscan.com/',
-  ticker: 'MATIC',
-  tickerName: 'Matic'
+  blockExplorer: "https://mumbai.polygonscan.com/",
+  ticker: "MATIC",
+  tickerName: "Matic",
 };
 
-const privateKeyProvider = new CommonPrivateKeyProvider({ config: { chainConfig } });
+const privateKeyProvider = new CommonPrivateKeyProvider({
+  config: { chainConfig },
+});
 
 function App() {
   const [web3auth, setWeb3auth] = useState<Web3AuthNoModal | null>(null);
-  const [provider, setProvider] = useState<SafeEventEmitterProvider | null>(null);
+  const [provider, setProvider] = useState<SafeEventEmitterProvider | null>(
+    null
+  );
 
   useEffect(() => {
     const init = async () => {
@@ -44,28 +53,40 @@ function App() {
           adapterSettings: {
             network: "testnet",
             clientId,
-            uxMode: 'redirect',
+            uxMode: "redirect",
             loginConfig: {
               // Add login configs corresponding to the provider
               // For firebase/ cognito & other providers, you need to pass the JWT token
               // JWT login
               jwt: {
-                name: 'firebase-login-connect',
+                name: "firebase-login-connect",
                 verifier, // Please create a verifier on the developer dashboard and pass the name here
                 typeOfLogin: "jwt",
                 clientId,
               },
               // Add other login providers here
             },
-          }
+          },
         });
         web3auth.configureAdapter(openloginAdapter);
         setWeb3auth(web3auth);
 
         await web3auth.init();
         setProvider(web3auth.provider);
+        web3auth.on(ADAPTER_EVENTS.CONNECTED, () => {
+          console.log("### web3auth connected");
+        });
+        web3auth.on(ADAPTER_EVENTS.DISCONNECTED, () => {
+          console.log("### web3auth disconnected");
+        });
+        web3auth.on(ADAPTER_EVENTS.CONNECTING, () => {
+          console.log("### web3auth connecting");
+        });
+        web3auth.on(ADAPTER_EVENTS.ERRORED, (error) => {
+          console.error("### web3auth error", error);
+        });
 
-        console.log('web3auth.init done')
+        console.log("### web3auth.init done");
       } catch (error) {
         console.error(error);
       }
@@ -80,7 +101,7 @@ function App() {
       authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
       projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
     };
-    console.log('firebaseConfig: ', firebaseConfig)
+    console.log("firebaseConfig: ", firebaseConfig);
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -92,26 +113,29 @@ function App() {
     const idToken = await result.user?.getIdToken();
 
     return idToken;
-  }
+  };
 
   const login = async () => {
     const idToken = await loginWithGoogle();
-    console.log('idToken: ', idToken);
+    console.log("idToken: ", idToken);
 
     if (!web3auth) {
       console.log("web3auth not initialized yet");
       return;
     }
-    const web3authProvider = await web3auth.connectTo(WALLET_ADAPTERS.OPENLOGIN, {
-      mfaLevel: "default", // Pass on the mfa level of your choice: default, optional, mandatory, none
-      // relogin: true,
-      loginProvider: "jwt",
-      // redirectUrl: window.location.origin,
-      extraLoginOptions: {
+    const web3authProvider = await web3auth.connectTo(
+      WALLET_ADAPTERS.OPENLOGIN,
+      {
+        mfaLevel: "default", // Pass on the mfa level of your choice: default, optional, mandatory, none
+        // relogin: true,
+        loginProvider: "jwt",
+        // redirectUrl: window.location.origin,
+        extraLoginOptions: {
           id_token: idToken,
-          verifierIdField: 'sub', // same as your JWT Verifier ID on dashboard
-      },
-    });
+          verifierIdField: "sub", // same as your JWT Verifier ID on dashboard
+        },
+      }
+    );
     setProvider(web3authProvider);
   };
 
@@ -279,7 +303,9 @@ function App() {
         & NextJS Example
       </h1>
 
-      <div className="grid">{web3auth?.connected ? loggedInView : unloggedInView}</div>
+      <div className="grid">
+        {web3auth?.connected ? loggedInView : unloggedInView}
+      </div>
 
       <hr />
       <div className="grid">
@@ -289,12 +315,19 @@ function App() {
           </button>
         </div>
         <div>
-          <p>window.history.state:<code>{JSON.stringify(window.history.state)}</code></p>
+          <p>
+            window.history.state:
+            <code>{JSON.stringify(window.history.state)}</code>
+          </p>
         </div>
       </div>
 
       <footer className="footer">
-        <a href="https://github.com/Web3Auth/web3auth-pnp-examples/" target="_blank" rel="noopener noreferrer">
+        <a
+          href="https://github.com/Web3Auth/web3auth-pnp-examples/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           Source code
         </a>
       </footer>
