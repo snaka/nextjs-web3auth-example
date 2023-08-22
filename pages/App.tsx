@@ -71,7 +71,6 @@ function App() {
         web3auth.configureAdapter(openloginAdapter);
         setWeb3auth(web3auth);
 
-        await web3auth.init();
         setProvider(web3auth.provider);
         web3auth.on(ADAPTER_EVENTS.CONNECTED, () => {
           console.log("### web3auth connected");
@@ -85,6 +84,7 @@ function App() {
         web3auth.on(ADAPTER_EVENTS.ERRORED, (error) => {
           console.error("### web3auth error", error);
         });
+        await web3auth.init();
 
         console.log("### web3auth.init done");
       } catch (error) {
